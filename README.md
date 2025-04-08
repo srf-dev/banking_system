@@ -35,7 +35,7 @@ cd /caminho/do/seu/diretorio
 2. Clone o repositório:
 
 ```bash
-git clone https://github.com/usuario/repositorio.git
+git clone https://github.com/srf-dev/banking_system.git
 ```
 
 3. Acesse a pasta do projeto:
@@ -47,7 +47,7 @@ cd repositorio
 4. Execute o script:
 
 ```bash
-python sistema_bancario.py
+python application.py
 ```
 
 ---
