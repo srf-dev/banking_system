@@ -104,7 +104,17 @@ Valor disponível em conta: R$ 1490.0
 {'[05/04/2025 01:46] Saque realizado no valor de: R$ 10.00'}
 ```
 
+---
 
+### Branches de Desenvolvimento
+
+| Branch                     | Descrição                                         | Status      | Link                                                                 |
+|---------------------------|---------------------------------------------------|-------------|----------------------------------------------------------------------|
+| `main`                    | Versão principal e estável                        | ✔️ Concluído | [Ver](https://github.com/srf-dev/banking_system/tree/main)     |
+| `optimize/banking-system` | Refatoração e otimização do sistema bancário      | ✔️ Concluído | [Ver](https://github.com/srf-dev/banking_system/tree/optimize/banking-system) |
+| `feature/new-api`         | Implementação de novas atualizações               | Planejando   | *em breve*                                                           |
+
+---
 
 ## Autor
 
