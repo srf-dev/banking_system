@@ -2,107 +2,75 @@
 
 <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
 
-## Sobre
-
-Este projeto é um **simulador de sistema bancário** desenvolvido como desafio proposto pela **DIO**. O objetivo foi aplicar conceitos de programação em Python aprendidos, como:
-
-- Funções
-- Estruturas condicionais
-- Laços de repetição
-- Manipulação de variáveis
-
-O sistema permite ao usuário realizar **operações bancárias simples**, como **depósito**, **saque** e **visualização de extrato**.
+Resumo sobre os **comandos e funcionalidades implementados** com a proposta de modularização da **versão 2 do sistema bancário em Python**.
 
 ---
 
-## Pré-requisitos
+### ✔️ **Comandos Implementados**
 
-- Python 3 instalado na máquina
-- Terminal, prompt de comando ou IDE (como VS Code)
+#### *Modularização com Funções Separadas*
 
----
+**Funções existentes separadas e refatoradas:**
+- `withdraw_account`: função separada para saque.
+- `deposit_account`: função separada para depósito.
+- `show_extract`: função separada para exibir extrato.
+<br><br>
 
-## Como instalar
-
-Via terminal (Git Bash, cmd, etc.):
-
-1. Acesse o diretório onde deseja clonar o repositório:
-
-```bash
-cd /caminho/do/seu/diretorio
-```
-
-2. Clone o repositório:
-
-```bash
-git clone https://github.com/srf-dev/banking_system.git
-```
-
-3. Acesse a pasta do projeto:
-
-```bash
-cd repositorio
-```
-
-4. Execute o script:
-
-```bash
-python application.py
-```
+> As funções seguem prática de passagem de parâmetros e uso de validações.
 
 ---
 
-## Como utilizar
+### **✔️ Descrição das Funções**
 
-Ao iniciar o programa, o usuário verá um menu com as opções disponíveis:
+#### `withdraw_account(*, users, CPF, extract)`
+- Recebe argumentos por **nome** (*keyword only*).
+- Faz validação da conta, valor e quantidade de saques restantes.
+- Atualiza saldo e extrato após o saque.
+- Limite de 3 saques por dia por usuário.
+- Limite de R$ 500,00 por saque.
 
-- `1` para saque
-- `2` para depósito
-- `3` para extrato
-- `4` para sair
+#### `deposit_account(users, CPF, extract)`
+- Recebe argumentos **por posição** (*positional-only*).
+- Valida conta e valor.
+- Atualiza saldo e extrato após depósito.
 
-O sistema inicia com um saldo fictício de **R$ 1500,00** (valor que pode ser alterado diretamente no código).
-
----
-
-## Funcionalidades
-
-- **Depósito** de valores positivos
-- **Saque** com limite de 3 operações por sessão
-- **Mensagem de erro** para saques com saldo insuficiente
-- **Extrato** com o histórico completo das operações e saldo atual
-- **Interface simples** via terminal
+#### `show_extract(saldo, *, extrato)`
+- Recebe `saldo` por posição e `extrato` por nome (*position and keyword only*).
+- Exibe o histórico de movimentações se houver, senão mostra uma mensagem de extrato vazio.
 
 ---
 
-## Regras implementadas
+### **✔️ Novas Funções Criadas**
 
-- Não é possível depositar valores negativos ou zerados
-- Máximo de **3 saques** por execução do programa
-- Saques só são permitidos se houver **saldo suficiente**
-- O extrato exibe **todas as movimentações** e o **saldo final**
+#### `User.create()`
+- Permite cadastrar um novo usuário.
+- Valida se o CPF já está em uso.
+- Armazena:
+  - CPF (somente números)
+  - Nome
+  - Data de nascimento
+  - Endereço (logradouro, número - bairro - cidade/estado)
+
+> Evita cadastro duplicado por CPF.
 
 ---
 
-## Exemplo de uso
+#### `User.create_account(users, CPF)`
+- Cria uma conta para um usuário já existente.
+- Verifica se o CPF está cadastrado.
+- Verifica se o número da conta já está vinculado a outro usuário.
+- Vincula conta à lista `accounts` do usuário.
 
-```bash
-[1] Sacar
-[2] Depositar
-[3] Ver Extrato
-[4] Sair
-=> 1
-Digite o valor: 10
+---
 
-O depósito foi realizado com sucesso no valor de: R$ 10,00
+### **Outras Funcionalidades**
 
-=> 3
-EXTRATO
------------------------------------------------
-Valor disponível em conta: R$ 1490.0 
------------------------------------------------
-{'[05/04/2025 01:46] Saque realizado no valor de: R$ 10.00'}
-```
+#### `User.data_user()`
+- Retorna um dicionário com os dados do usuário e contas vinculadas.
+
+#### Listagem de usuários
+- Imprime dados de todos os usuários cadastrados, incluindo número de contas e agência.
+
 
 ---
 
