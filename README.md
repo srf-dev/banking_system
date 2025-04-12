@@ -112,7 +112,7 @@ Valor disponível em conta: R$ 1490.0
 |---------------------------|---------------------------------------------------|-------------|----------------------------------------------------------------------|
 | `main`                    | Versão principal e estável                        | ✔️ Concluído | [Ver](https://github.com/srf-dev/banking_system/tree/main)     |
 | `optimize/banking-system` | Refatoração e otimização do sistema bancário      | ✔️ Concluído | [Ver](https://github.com/srf-dev/banking_system/tree/optimize/banking-system) |
-| `feature/new-api`         | Implementação de novas atualizações               | Planejando   | *em breve*                                                           |
+| `refactor/banking-system` | Implementação de novas atualizações               | ✔️ Concluído   | [Ver](https://github.com/srf-dev/banking_system/blob/refactor/banking-system/README.md)                                                         |
 
 ---
 
