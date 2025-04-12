@@ -1,80 +1,106 @@
-# Simulador Básico de Sistema Bancário em Python
+# Sistema Bancário com Orientação a Objetos em Python
 
 <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
 
-Resumo sobre os **comandos e funcionalidades implementados** com a proposta de modularização da **versão 2 do sistema bancário em Python**.
+Implementação de um sistema bancário orientado a objetos em Python, com uso de herança, polimorfismo e encapsulamento. Essa versão segue o paradigma de programação orientada a objetos (POO).
+
+> 📌 Branch: `refactor/banking-system`
 
 ---
 
-### ✔️ **Comandos Implementados**
+### ✔️ **Principais Componentes da Refatoração**
 
-#### *Modularização com Funções Separadas*
+#### *Organização por Classes e Responsabilidades*
 
-**Funções existentes separadas e refatoradas:**
-- `withdraw_account`: função separada para saque.
-- `deposit_account`: função separada para depósito.
-- `show_extract`: função separada para exibir extrato.
-<br><br>
+**Classes principais implementadas:**
+- `Client`: representa o cliente do banco.
+- `Account`: representa uma conta bancária.
+- `Transaction`: classe base para operações.
+- `Withdraw` / `Deposit`: herdam de `Transaction` e representam saques e depósitos.
+- `History`: armazena o extrato da conta.
+- `Menu`: interface de interação no terminal.
 
-> As funções seguem prática de passagem de parâmetros e uso de validações.
-
----
-
-### **✔️ Descrição das Funções**
-
-#### `withdraw_account(*, users, CPF, extract)`
-- Recebe argumentos por **nome** (*keyword only*).
-- Faz validação da conta, valor e quantidade de saques restantes.
-- Atualiza saldo e extrato após o saque.
-- Limite de 3 saques por dia por usuário.
-- Limite de R$ 500,00 por saque.
-
-#### `deposit_account(users, CPF, extract)`
-- Recebe argumentos **por posição** (*positional-only*).
-- Valida conta e valor.
-- Atualiza saldo e extrato após depósito.
-
-#### `show_extract(saldo, *, extrato)`
-- Recebe `saldo` por posição e `extrato` por nome (*position and keyword only*).
-- Exibe o histórico de movimentações se houver, senão mostra uma mensagem de extrato vazio.
+> O sistema utiliza **herança, polimorfismo, encapsulamento** e abstração com `abc.ABC`.
 
 ---
 
-### **✔️ Novas Funções Criadas**
+### **✔️ Detalhes das Classes**
 
-#### `User.create()`
-- Permite cadastrar um novo usuário.
-- Valida se o CPF já está em uso.
-- Armazena:
-  - CPF (somente números)
-  - Nome
-  - Data de nascimento
-  - Endereço (logradouro, número - bairro - cidade/estado)
+#### `Client`
+- Classe base para clientes
+- Possui endereço e lista de contas
+- Métodos:
+  - `add_account(account)`
+  - `do_transaction(account, transaction)`
 
-> Evita cadastro duplicado por CPF.
+#### `NaturalPerson(Client)`
+- Cliente pessoa física
+- Atributos:
+- CPF, nome, data de nascimento, endereço
+
+#### `Account`
+- Classe base para contas
+- Atributos:
+  - agência, número da conta, saldo, cliente, histórico
+- Métodos:
+  - `withdraw(value)`
+  - `deposit(value)`
+  - `create_account(number, client)`
+
+#### `CurrentAccount(Account)`
+- Conta corrente com:
+  - limite de R$ 500,00 por saque
+  - máximo de 3 saques por dia
+- Sobrescreve `withdraw(value)` para aplicar restrições
+
+#### `History`
+- Armazena transações
+- Método:
+  - `add_transaction(transaction)`
+
+#### `Transaction (abstract)`
+- Interface para transações
+- Métodos abstratos:
+  - `value`
+  - `register(account)`
+
+#### `Deposit(Transaction)`
+- Representa um depósito
+- Método `register(account)` chama `account.deposit`
+
+#### `Withdraw(Transaction)`
+- Representa um saque
+- Método `register(account)` chama `account.withdraw`
 
 ---
 
-#### `User.create_account(users, CPF)`
-- Cria uma conta para um usuário já existente.
-- Verifica se o CPF está cadastrado.
-- Verifica se o número da conta já está vinculado a outro usuário.
-- Vincula conta à lista `accounts` do usuário.
+### ✔️ **Interação via Terminal**
+
+Menu interativo com as seguintes opções:
+
+- [1] Sacar 
+- [2] Depositar 
+- [3] Ver Extrato 
+- [4] Criar conta (Pessoa Física) 
+- [5] Listar contas 
+- [6] Criar novo usuário 
+- [7] Sair
+  
 
 ---
 
-### **Outras Funcionalidades**
+### Funções Auxiliares
 
-#### `User.data_user()`
-- Retorna um dicionário com os dados do usuário e contas vinculadas.
-
-#### Listagem de usuários
-- Imprime dados de todos os usuários cadastrados, incluindo número de contas e agência.
-
+```python
+filter_clients(clients, cpf)   # Filtra cliente pelo CPF
+list_accounts(accounts)        # Exibe informações das contas
+create_client(clients)         # Cria um novo cliente
+````
 
 
 
 ## Autor
 
 Feito com 💜 por Shayare 🐈
+
 

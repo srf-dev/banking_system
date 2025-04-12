@@ -1,5 +1,233 @@
+from abc import ABC, abstractmethod
 from datetime import datetime
 import textwrap
+
+class Client():
+    def __init__(self, address):
+        self.address = address
+        self.accounts = []
+    
+    def add_account(self, account):
+        self.accounts.append(account)
+
+    def do_transaction(self, account, transaction):
+        transaction_success = transaction.register(account)
+        if transaction_success:
+            account.history.add_transaction(transaction)
+
+class NaturalPerson(Client):
+    def __init__(self, cpf, name, date_birth, address):
+        super().__init__(address)
+        self.cpf = cpf
+        self.name = name
+        self.date_birth = date_birth
+
+
+class Account():
+    def __init__(self, number, client):
+        self._AGENCY = '0001'
+        self._balance = 0
+        self._number = number
+        self._client = client
+        self._history = History()
+
+    @classmethod
+    def create_account(cls, number, client):
+        account = cls(number, client)
+        client.add_account(account)
+        return account
+    
+    @property
+    def agency(self):
+        return self._AGENCY
+    
+    @property
+    def balance(self):
+        return self._balance
+    
+    @property
+    def number(self):
+        return self._number
+    
+    @property
+    def client(self):
+        return self._client
+    
+    @property
+    def history(self):
+        return self._history
+
+    def withdraw(self, value):
+        if value > self._balance:
+            print('\n ❌ (ERRO) Valor de saldo excedido!  \n')
+            return False
+
+        if value <= 0:
+            print('\n ❌ (ERRO) O valor digitado é inválido!  \n')
+            return False
+
+        self._balance -= value
+        print('\n ✅ Saque realizado com sucesso!  \n')
+        return True
+
+    def deposit(self, value): 
+        if value <= 0:
+            print('\n ❌ (ERRO) O valor digitado é inválido!  \n')
+            return False
+
+        self._balance += value
+        print('\n ✅ Depósito realizado com sucesso!  \n')
+        return True
+
+class CurrentAccount(Account):
+    def __init__(self, number, client, number_of_withdrawals=3, withdrawal_limit=500):
+        super().__init__(number, client)
+        self._number_of_withdrawals = number_of_withdrawals
+        self._withdrawal_limit = withdrawal_limit
+    
+    def withdraw(self, value):
+        number_of_withdrawals = len([t for t in self.history.transactions if t["tipo"] == 'Withdraw'])
+        
+        if value > self._withdrawal_limit:
+            print('\n ❌ (ERRO) Valor excede o limite por saque! \n')
+            return False
+
+        if number_of_withdrawals >= self._number_of_withdrawals:
+            print('\n ❌ (ERRO) Número máximo de saques excedido! \n')
+            return False
+
+        return super().withdraw(value)
+
+class Transaction(ABC):
+    @property
+    @abstractmethod
+    def value(self):
+        pass
+
+    @abstractmethod
+    def register(self, account):
+        pass
+
+class History():
+    def __init__(self):
+        self._transactions = []
+
+    @property
+    def transactions(self):
+        return self._transactions
+    
+    def add_transaction(self, transaction):
+        self._transactions.append({
+            "tipo": transaction.__class__.__name__,
+            "valor": transaction.value,
+            "data": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+        })
+
+class Deposit(Transaction):
+    def __init__(self, value):
+        self._value = value
+
+    @property
+    def value(self):
+        return self._value
+
+    def register(self, account):
+        return account.deposit(self._value)
+
+class Withdraw(Transaction):
+    def __init__(self, value):
+        self._value = value
+
+    @property
+    def value(self):
+        return self._value
+
+    def register(self, account):
+        return account.withdraw(self._value)
+
+def filter_clients(clients, cpf):
+    filtered_client = [client for client in clients if client.cpf == cpf]
+    return filtered_client[0] if filtered_client else None
+
+def list_accounts(accounts):
+    for account in accounts:
+        print(f"""
+            Agência: {account.agency}
+            Conta: {account.number}
+            Titular: {account.client.name}
+        """)
+
+def create_client(clients):
+    cpf = input('\n Digite o CPF (Apenas números): \n')
+    client = filter_clients(clients, cpf)
+
+    if client:
+        print('\n ❌ (ERRO) CPF já vinculado!  \n')
+        return
+    
+    name = input('Digite seu nome completo: ')
+    date_birth = input('Digite a data do seu nascimento (dd/mm/aaaa): ')
+    address = input('Digite seu endereço: (Logradouro, Número - Bairro - Cidade/Estado): ')
+
+    client = NaturalPerson(cpf=cpf, name=name, date_birth=date_birth, address=address)
+
+    clients.append(client)
+
+    print('\n ✅ Cliente criado com sucesso!  \n')
+
+def create_account(accounts, clients, number):
+    cpf = input('\n Digite o CPF (Apenas números): \n')
+    client = filter_clients(clients, cpf)
+
+    if not client:
+        print('\n ❌ (ERRO) Não há clientes registrados com esse CPF! \n')
+        return
+
+    account = CurrentAccount(number, client)
+    client.add_account(account)
+    accounts.append(account)
+    print('\n ✅ Conta criada com sucesso! \n')
+
+def request_withdrawal(clients):
+    cpf = input('\n Informe o CPF: ')
+    client = filter_clients(clients, cpf)
+
+    if not client:
+        print('\n ❌ Cliente não encontrado.')
+        return
+
+    value = float(input('Informe o valor do saque: '))
+    account = client.accounts[0]
+    transaction = Withdraw(value)
+    client.do_transaction(account, transaction)
+
+def request_deposit(clients):
+    cpf = input('\n Informe o CPF: ')
+    client = filter_clients(clients, cpf)
+
+    if not client:
+        print('\n ❌ Cliente não encontrado.')
+        return
+
+    value = float(input('Informe o valor do depósito: '))
+    account = client.accounts[0]
+    transaction = Deposit(value)
+    client.do_transaction(account, transaction)
+
+def show_statement(clients):
+    cpf = input('\n Informe o CPF: ')
+    client = filter_clients(clients, cpf)
+
+    if not client:
+        print('\n ❌ Cliente não encontrado.')
+        return
+
+    account = client.accounts[0]
+    print(f"\n ===== EXTRATO da conta {account.number} =====")
+    for t in account.history.transactions:
+        print(f"{t['data']} - {t['tipo']}: R$ {t['valor']:.2f}")
+    print(f"\nSaldo atual: R$ {account.balance:.2f}")
+    print("="*40)
 
 def menu():
     menu =f"""
@@ -7,304 +235,48 @@ def menu():
 
             Escolha um tipo de operação:
 
-            [1] Criar novo usuário
-            [2] Criar conta corrente
-            [3] Listar usuários
-            [4] Sacar
-            [5] Depositar
-            [6] Ver Extrato
+            [1] Sacar
+            [2] Depositar
+            [3] Ver Extrato
+            [4] Criar conta (Pessoa Física)
+            [5] Listar contas
+            [6] Criar novo usuário
             [7] Sair
 
             """
     return int(input(textwrap.dedent(menu)))
 
-class User:
-    def __init__(self, CPF, username, date_birth, address, bank_account, NUMBER_OF_WITHDRAWALS):
-        self._CPF = CPF
-        self.username = username
-        self.date_birth = date_birth
-        self.address = address
-
-        self._bank_account = bank_account
-        self._NUMBER_OF_WITHDRAWALS = NUMBER_OF_WITHDRAWALS
-        self.AGENCY = '0001'
-        self.accounts = []
-
-    def data_user(self):
-        return {
-            "Nome": self.username,
-            "Data_Nascimento": self.date_birth,
-            "Endereco": self.address,
-            "Agencia": self.AGENCY,
-            "Contas": self.accounts
-        }
-    
-    @classmethod
-    def create(cls, users):
-        while True:
-            CPF = input("Digite seu CPF (Apenas Números!): ").strip()
-
-            if not cls.validate_cpf(CPF):
-                print('\n ⚠️  (ERRO) O CPF deve conter 11 digítos! Tente novamente. \n')
-                continue
-           
-            if cls.user_manager(users, CPF):
-                print('\n ⚠️  (ERRO) CPF já vinculado! Tente novamente. \n')
-                continue
-            
-            username = input('Digite seu nome completo: ')
-            date_birth = input('Digite a data do seu nascimento (dd/mm/aaaa): ')
-            address = input('Digite seu endereço: (Logradouro, Número - Bairro - Cidade/Estado): ')
-            bank_account = 0
-            NUMBER_OF_WITHDRAWALS = 3
-
-            return cls(CPF, username, date_birth, address, bank_account, NUMBER_OF_WITHDRAWALS)
-
-    @staticmethod
-    def validate_cpf(CPF):
-        return len(str(CPF)) == 11
-
-    @staticmethod
-    def user_manager(users, CPF):
-        for user in users:
-            if user._CPF == CPF:
-                return True
-        return False
-    
-    @staticmethod
-    def create_account(users, CPF):
-        if not users:
-            print(textwrap.dedent('''
-            -----------------------------------------------
-                   ❌ Não há usuários cadastrados!
-            -----------------------------------------------                                
-            '''))
-            return
-            
-
-        for user in users:
-            if user._CPF == CPF:
-                account_number = int(input(textwrap.dedent('''
-                -----------------------------------------------
-                                Criar conta 
-                -----------------------------------------------
-                            
-                Digite o número da conta bancária:
-                                        
-                ''')))
-
-                accounts = user.accounts
-
-                if account_number in accounts:
-                    print(textwrap.dedent('''
-                    -----------------------------------------------
-                          Conta já vinculada com seu usuário!
-                    -----------------------------------------------                                            
-                    '''))
-                elif any(account_number in us.accounts for us in users if us._CPF != CPF):
-                          print(textwrap.dedent('''
-                    -----------------------------------------------
-                       ❌ Conta já vinculada com outro usuário!
-                    -----------------------------------------------                                            
-                    '''))              
-                else:
-                    user.accounts.append(account_number)
-                    print(textwrap.dedent('''
-                    -----------------------------------------------
-                            ✅ Conta criada com sucesso!
-                    -----------------------------------------------                                
-                    '''))
-                return
-
-        print(textwrap.dedent('''
-        -----------------------------------------------
-         ❌ Não há usuários cadastrados com esse CPF!
-        -----------------------------------------------                                
-        '''))
-                    
-def withdraw_account(users, /, CPF, *, extract):
-    withdrawal_limit = 500.00
-
-    for user in users:
-        if user._CPF == CPF:
-            accounts = user.accounts
-            account_number = int(input('\n Digite o número da conta: \n'))
-
-            if account_number in accounts:
-                value = 0
-                if user._NUMBER_OF_WITHDRAWALS > 0:
-                    
-                    while value <= 0 or value > user._bank_account:
-                        selection = int(input(textwrap.dedent('''
-                        -----------------------------------------------
-                                            Opções
-                        -----------------------------------------------
-                        
-                        Digite:
-                        [1] Para continuar
-                        [2] Para sair
-                                    
-                        ''')))
-
-                        if selection == 1:
-                            value = float(input("\n Digite o valor: \n"))
-
-                            if value <= 0:
-                                print('\n ❌  Valor inválido! Não é permitido valores negativos. \n')
-                            elif value > user._bank_account:
-                                print('\n ❌  Valor inválido! Saldo insuficiente em conta. \n')
-                            elif value > withdrawal_limit:
-                                print(f'\n ❌  Valor inválido! O valor máximo para saque é de R$ {withdrawal_limit} \n')
-                            else:
-                                print(f'\n ✅ O saque foi realizado com sucesso no valor de: R$ {value:.2f} \n')
-                                date = datetime.now().strftime("%d/%m/%Y %H:%M")
-                                extract.append(f"[{date}] [Agência: {user.AGENCY}] [Conta: {account_number}] ✅ Saque realizado por {user.username} no valor de: R$ {value:.2f}")
-
-                                user._bank_account -= value
-
-                                user._NUMBER_OF_WITHDRAWALS-=1
-                        elif selection == 2:
-                            break
-                        else:
-                            print('\n Opção inválida! Digite novamente. \n')
-                else:
-                    print('\n ❌ Limite de saques esgotado! É permitido apenas 3 saques diários. \n')
-                break
-            else:
-                print('\n ❌  (Conta inválida!) A conta inserida não está registrada. \n')
-                break                   
-    else:
-        print(textwrap.dedent('''
-        -----------------------------------------------
-                O CPF inserido não está registrado!
-        -----------------------------------------------
-        '''))
-
-def deposit_account(users, CPF, extract):
-        for user in users:
-            if user._CPF == CPF:
-                accounts = user.accounts
-                account_number = int(input('\n Digite o número da conta: \n'))
-
-                if account_number in accounts:
-
-                    selection = int(input(textwrap.dedent('''
-                    -----------------------------------------------
-                                        Opções
-                    -----------------------------------------------
-                            
-                    Digite:
-                    [1] Para continuar
-                    [2] Para sair
-                                        
-                    ''')))
-
-                    if selection == 1:
-                        value = float(input("Digite o valor: "))
-
-                        if value <= 0:
-                            print('\n ❌  Valor inválido! Não é permitido valores negativos. \n')
-                        else:
-                            print(f'\n ✅ Depósito realizado com sucesso no valor de: R$ {value:.2f} \n')
-                            date = datetime.now().strftime("%d/%m/%Y %H:%M")
-                            extract.append(f"[{date}] [Agência: {user.AGENCY}] [Conta: {account_number}] ✅ Depósito realizado por {user.username} no valor de: R$ {value:.2f}")
-
-                            user._bank_account += value
-
-                    elif selection == 2:
-                        break
-                    else:
-                        print('\n Opção inválida! Digite novamente. \n')                   
-                else:
-                    print('\n ❌  (Conta inválida!) A conta inserida não está registrada. \n')  
-
-                return
-        
-        print(textwrap.dedent('''
-        -----------------------------------------------
-             O CPF inserido não está registrado!
-        -----------------------------------------------
-        '''))
-
-def show_extract(extract):
-        
-        if extract:
-            print(textwrap.dedent(f'''
-                                  
-            -----------------------------------------------
-                                EXTRATO
-            -----------------------------------------------
-            
-            '''))
-            for activity in extract:
-                print({activity}, end="\n")
-        else:
-            print(textwrap.dedent(f'''
-                                  
-            ------------------------------------------------
-             Ainda não foi realizando nenhuma novimentação!
-            ------------------------------------------------
-            
-            '''))
-
 def main():
-    users = []
-    extract = []
+    clients = []
+    accounts = []
 
     while True:
         selection = menu()
 
         if selection == 1:
-            new_user = User.create(users)
-            users.append(new_user)
-            print(textwrap.dedent('''
-                                  
-                ------------------------------------
-                  ✅ Usuário criado com sucesso!
-                ------------------------------------
-                                  
-                  '''))
+            request_withdrawal(clients)
         
         elif selection == 2:
-            CPF = input('Digite seu CPF: ')
-            User.create_account(users, CPF)
+            request_deposit(clients)
 
         elif selection == 3:
-            if not users:
-                print(textwrap.dedent('''
-                                  
-                -----------------------------------------------
-                  ❌ Não há usuários cadastrados no sistema!
-                -----------------------------------------------
-                                  
-                  '''))
-            else:
-                print(textwrap.dedent('''
-                -----------------------------------------------
-                        Usuários cadastrados no sistema:
-                -----------------------------------------------
-                '''))
-
-                for user in users:
-                    data = user.data_user()
-                    print(f'\n'.join(f'{key}: {value}' for key, value in data.items()),'\n')
-                    print("-" * 55 + "\n")
-
+            show_statement(clients)
 
         elif selection == 4:
-            CPF = input('Digite seu CPF: ')
-            withdraw_account(users, CPF, extract=extract)
+            number = len(accounts) + 1
+            create_account(accounts, clients, number)       
 
         elif selection == 5:
-            CPF = input('Digite seu CPF: ')
-            deposit_account(users, CPF, extract)
+            list_accounts(accounts)
 
-        elif selection == 6:
-            show_extract(extract)
+        elif selection == 6: 
+            create_client(clients)
 
         elif selection == 7:
-            print('Programa encerrado!')
+            print('\n ✅ Saindo do sistema...\n')
             break
+
         else:
-            print("\n ⚠️  Opção não implementada. Digite uma opção válida! \n")
+            print('\n ❌ Opção inválida. Tente novamente. \n')
+
 main()
