@@ -4,7 +4,7 @@
 
 ## Sobre
 
-Este projeto é um **simulador de sistema bancário** desenvolvido como desafio proposto pela **DIO**. O objetivo foi aplicar conceitos de programação em Python aprendidos, como:
+Este projeto é um **simulador de sistema bancário**. O objetivo foi aplicar conceitos de programação em Python, como:
 
 - Funções
 - Estruturas condicionais
